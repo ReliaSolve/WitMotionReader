@@ -27,7 +27,7 @@ cd ~/src
 git clone --recursive https://github.com/ReliaSolve/WitMotionReader.git
 mkdir -p ~/build/WitMotionReader
 cd ~/build/WitMotionReader
-cmake
+cmake ~/src/WitMotionReader
 make
 ```
 
