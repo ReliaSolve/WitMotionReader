@@ -32,7 +32,7 @@ make
 ```
 
 This will build a program named *witExample* that can be run with the name of the
-virtual serial port to use. For example, `./witExample /dev/ttyS0'
+virtual serial port to use. For example, `./witExample /dev/ttyS0`
 This program should auto-detect the baud rate on the device and then start
 printing the acceleration, gyro rotation rate, angle of orientation, and
 magnetometer readings. Press ^C to quit the program.
