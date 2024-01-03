@@ -34,14 +34,6 @@ int main(int argc,char* argv[])
 
 	printf("\n********************** Found device ************************\n");
 
-  // These counts are used to determine when there has been a change on one
-  // of the values in the loop below.  Whenever the corresponding _COUNT
-  // global variable changes, we can perform the appropriate action and then
-  // set the count to match so we don't redo an action.
-  // An alternate approach would be to handle the action in the callback
-  // directly.
-  int lastAccCount = -1, lastGyroCount = -1, lastAngleCount = -1, lastMagCount = -1;
-
   // Continually loop, reading and interpreting characters until the
   // callback is called with new data updates.
 	while (1) {
@@ -67,13 +59,6 @@ int main(int argc,char* argv[])
 // us know which ones have been updated.
 static void SensorDataUpdate(uint32_t uiReg, uint32_t uiRegNum)
 {
-  // Provides a way for us to only print things every once in a while.
-  // @todo this will not be needed for a program that handles each event.
-  static volatile int ACC_COUNT = 0;
-  static volatile int GYRO_COUNT = 0;
-  static volatile int ANGLE_COUNT = 0;
-  static volatile int MAG_COUNT = 0;
-
   // Loop through all of the registers, starting with the
   // one in the first parameter and going through as many
   // as are specified in the second.
@@ -87,8 +72,7 @@ static void SensorDataUpdate(uint32_t uiReg, uint32_t uiRegNum)
 //    case AX:
 //    case AY:
       case AZ:
-        ACC_COUNT++;
-        if (ACC_COUNT % 100 == 0) {
+        {
           float fAcc[3];
           int i;
           for(i = 0; i < 3; i++) {
@@ -101,8 +85,7 @@ static void SensorDataUpdate(uint32_t uiReg, uint32_t uiRegNum)
 //    case GX:
 //    case GY:
       case GZ:
-        GYRO_COUNT++;
-        if (GYRO_COUNT % 100 == 0) {
+        {
           float fGyro[3];
           int i;
           for(i = 0; i < 3; i++) {
@@ -115,8 +98,7 @@ static void SensorDataUpdate(uint32_t uiReg, uint32_t uiRegNum)
 //    case HX:
 //    case HY:
       case HZ:
-        MAG_COUNT++;
-        if (MAG_COUNT % 100 == 0) {
+        {
           printf("mag:%d %d %d\n", sReg[HX], sReg[HY], sReg[HZ]);
         }
         break;
@@ -124,8 +106,7 @@ static void SensorDataUpdate(uint32_t uiReg, uint32_t uiRegNum)
 //    case Roll:
 //    case Pitch:
       case Yaw:
-        ANGLE_COUNT++;
-        if (ANGLE_COUNT % 100 == 0) {
+        {
           float fAngle[3];
           int i;
           for(i = 0; i < 3; i++) {
