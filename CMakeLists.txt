@@ -10,7 +10,11 @@ add_library(wit
 	)
 target_include_directories(wit PUBLIC submodules/WitStandardProtocol_JY901/Linux_C/normal)
 
-# add the example executable from the Wit-Motion SDK
+# Add the example executable from the Wit-Motion SDK
 add_executable(witExample submodules/WitStandardProtocol_JY901/Linux_C/normal/main.c)
 target_link_libraries(witExample wit)
+
+# Add the example to be used for development
+add_executable(example example.c)
+target_link_libraries(example wit)
 

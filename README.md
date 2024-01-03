@@ -53,10 +53,14 @@ make
 
 ### Running
 
-This will build a program named *witExample* that can be run with the name of the
+The *make* during build will generate a program named *witExample* that can be run with the name of the
 virtual serial port to use. For example, `./witExample /dev/ttyS0` (adjusting the
 device name as needed).
 This program should auto-detect the baud rate on the device and then start
 printing the acceleration, gyro rotation rate, angle of orientation, and
 magnetometer readings. Press ^C to quit the program.
+
+It will also generate a program named **example** from *example.c* that is both simpler
+and has a more general list of data values. It is also more heavily commented. It is
+intended to be used as an example for developing a driver that uses this device.
 
