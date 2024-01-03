@@ -3,13 +3,14 @@
 #include "REG.h"
 #include <stdint.h>
 
-#define ACC_UPDATE		0x01
-#define GYRO_UPDATE		0x02
-#define ANGLE_UPDATE	0x04
-#define MAG_UPDATE		0x08
-#define READ_UPDATE		0x80
-
-static volatile char s_cDataUpdate = 0;
+// This shows one way to keep track of when a new data item is available.
+// It records the number of times each data type has been updated since the
+// program started running.  Each is incremented in the callback function
+// as the last entry for its value is read.
+static volatile int ACC_COUNT = 0;
+static volatile int GYRO_COUNT = 0;
+static volatile int ANGLE_COUNT = 0;
+static volatile int MAG_COUNT = 0;
 
 static void SensorDataUpdate(uint32_t uiReg, uint32_t uiRegNum);
 
@@ -39,7 +40,7 @@ int main(int argc,char* argv[])
   // baud rate.
   int fd = -1;
   {
-    const int c_uiBaud[] = {2400 , 4800 , 9600 , 19200 , 38400 , 57600 , 115200 , 230400 , 460800 , 921600};
+    const int c_uiBaud[] = {2400, 4800, 9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600};
     int i;
     char cBuff[1];
     int found = 0;
@@ -50,15 +51,13 @@ int main(int argc,char* argv[])
  
       int iRetry = 2;
       do {
-        s_cDataUpdate = 0;
         usleep(50000);
-        WitReadReg(AX, 3);
         // Continually loop, reading and interpreting characters until the
         // callback is called with new data updates.
         while(serial_read_data(fd, cBuff, 1)) {
           WitSerialDataIn(cBuff[0]);
         }
-        if(s_cDataUpdate != 0) {
+        if(ACC_COUNT != 0) {
           found = 1;
           break;
         }
@@ -74,10 +73,17 @@ int main(int argc,char* argv[])
 
 	printf("\n********************** Found device ************************\n");
 
+  // These counts are used to determine when there has been a change on one
+  // of the values in the loop below.  Whenever the corresponding _COUNT
+  // global variable changes, we can perform the appropriate action and then
+  // set the count to match so we don't redo an action.
+  // An alternate approach would be to handle the action in the callback
+  // directly.
+  int lastAccCount = -1, lastGyroCount = -1, lastAngleCount = -1, lastMagCount = -1;
+
   // Continually loop, reading and interpreting characters until the
-  // callback is called with new data updates.
+  // callback is called with new data updates.s
 	while (1) {
-    float fAcc[3], fGyro[3], fAngle[3];
 
     // Get all available characters and send them to the library
     // for processing. When a report is available for a particular
@@ -88,29 +94,35 @@ int main(int argc,char* argv[])
 
     // The sReg array is an array of registers declared in the WitMotion
     // library whose values are changed when new data comes in.
-    if(s_cDataUpdate) {
+    // We convert raw values into appropriate units.
+
+    if (ACC_COUNT != lastAccCount && ACC_COUNT % 100 == 0) {
+      float fAcc[3];
       for(i = 0; i < 3; i++) {
         fAcc[i] = sReg[AX+i] / 32768.0f * 16.0f;
+      }
+      printf("acc:%.3f %.3f %.3f\n", fAcc[0], fAcc[1], fAcc[2]);
+      lastAccCount = ACC_COUNT;
+    }
+    if (GYRO_COUNT != lastGyroCount && GYRO_COUNT % 100 == 0) {
+      float fGyro[3];
+      for(i = 0; i < 3; i++) {
         fGyro[i] = sReg[GX+i] / 32768.0f * 2000.0f;
+      }
+      printf("gyro:%.3f %.3f %.3f\n", fGyro[0], fGyro[1], fGyro[2]);
+      lastGyroCount = GYRO_COUNT;
+    }
+    if (ANGLE_COUNT != lastAngleCount && ANGLE_COUNT % 100 == 0) {
+      float fAngle[3];
+      for(i = 0; i < 3; i++) {
         fAngle[i] = sReg[Roll+i] / 32768.0f * 180.0f;
       }
-
-      if(s_cDataUpdate & ACC_UPDATE) {
-        printf("acc:%.3f %.3f %.3f\n", fAcc[0], fAcc[1], fAcc[2]);
-        s_cDataUpdate &= ~ACC_UPDATE;
-      }
-      if(s_cDataUpdate & GYRO_UPDATE) {
-        printf("gyro:%.3f %.3f %.3f\n", fGyro[0], fGyro[1], fGyro[2]);
-        s_cDataUpdate &= ~GYRO_UPDATE;
-      }
-      if(s_cDataUpdate & ANGLE_UPDATE) {
-        printf("angle:%.3f %.3f %.3f\n", fAngle[0], fAngle[1], fAngle[2]);
-        s_cDataUpdate &= ~ANGLE_UPDATE;
-      }
-      if(s_cDataUpdate & MAG_UPDATE) {
-        printf("mag:%d %d %d\n", sReg[HX], sReg[HY], sReg[HZ]);
-        s_cDataUpdate &= ~MAG_UPDATE;
-      }
+      printf("angle:%.3f %.3f %.3f\n", fAngle[0], fAngle[1], fAngle[2]);
+      lastAngleCount = ANGLE_COUNT;
+    }
+    if (MAG_COUNT != lastMagCount && MAG_COUNT % 100 == 0) {
+      printf("mag:%d %d %d\n", sReg[HX], sReg[HY], sReg[HZ]);
+      lastMagCount = MAG_COUNT;
     }
   }
 
@@ -135,25 +147,24 @@ static void SensorDataUpdate(uint32_t uiReg, uint32_t uiRegNum)
 //      case AX:
 //      case AY:
       case AZ:
-        s_cDataUpdate |= ACC_UPDATE;
+        ACC_COUNT++;
         break;
 //      case GX:
 //      case GY:
       case GZ:
-        s_cDataUpdate |= GYRO_UPDATE;
+        GYRO_COUNT++;
         break;
 //      case HX:
 //      case HY:
       case HZ:
-        s_cDataUpdate |= MAG_UPDATE;
+        MAG_COUNT++;
         break;
 //      case Roll:
 //      case Pitch:
       case Yaw:
-        s_cDataUpdate |= ANGLE_UPDATE;
+        ANGLE_COUNT++;
         break;
       default:
-        s_cDataUpdate |= READ_UPDATE;
         break;
     }
     uiReg++;
