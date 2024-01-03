@@ -25,9 +25,9 @@ it is as follows:
 mkdir -p ~/src
 cd ~/src
 git clone --recursive https://github.com/ReliaSolve/WitMotionReader.git
-mkdir -p ~/src/WitMotionReader
-cd ~/src/WitMotionReader
-cmake ~/src/WitMotionReader
+mkdir -p ~/build/WitMotionReader
+cd ~/build/WitMotionReader
+cmake
 make
 ```
 
