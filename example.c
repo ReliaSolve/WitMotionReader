@@ -3,60 +3,11 @@
 #include "REG.h"
 #include <stdint.h>
 
-static void SensorDataUpdate(uint32_t uiReg, uint32_t uiRegNum);
-
-int main(int argc,char* argv[])
-{
-	if (argc != 3) {
-		printf("Usage: %s DEVICE_NAME BAUD\n", argv[0]);
-    printf("       DEVICE_NAME is the name of the serial device, like /dev/ttyUSB0\n");
-    printf("       BAUD is the baud rate of the serial device, like 230400\n");
-		return 1;
-	}
-  char *dev = argv[1];
-  int baud = atoi(argv[2]);
-
-  // Initialize the WitMotion library and register a callback for data values coming
-  // from the device.  The callback function is called whenever a range of registers
-  // has been updated, telling the application about the fact that they have been
-  // updated.  The changed values are stored in a global sReg structure that is
-  // exposed by the library, indexed by the same values as those passed to the
-  // callback function.
-	WitInit(WIT_PROTOCOL_NORMAL, 0x50);
-	WitRegisterCallBack(SensorDataUpdate);
-	
-  int fd = -1;
-  fd = serial_open(dev, baud);
-  if (fd < 0) {
-    printf("Could not open %s with baud %d\n", dev, baud);
-    return 2;
-  }
-
-	printf("\n********************** Found device ************************\n");
-
-  // Continually loop, reading and interpreting characters until the
-  // callback is called with new data updates.
-	while (1) {
-
-    // Get all available characters and send them to the library
-    // for processing. When a report is available for a particular
-    // value, the callback function will be called to let us know.
-    // The response happens in the callback handler, which deals with each report
-    // type as it arrives.
-    char cBuff[1];
-    while(serial_read_data(fd, cBuff, 1)) {
-      WitSerialDataIn(cBuff[0]);
-    }
-  }
-
-  serial_close(fd);
-	return 0;
-}
-
 // This is called whenever the WitSerialDataIn() function has enough
 // data to update one or more registers.  The values are updated in
 // the sReg global array and this callback function is called to let
-// us know which ones have been updated.
+// us know which ones have been updated.  The calculation and response
+// happens inside this callback function as each report is completed.
 static void SensorDataUpdate(uint32_t uiReg, uint32_t uiRegNum)
 {
   // Loop through all of the registers, starting with the
@@ -121,5 +72,53 @@ static void SensorDataUpdate(uint32_t uiReg, uint32_t uiRegNum)
     }
     uiReg++;
   }
+}
+
+int main(int argc,char* argv[])
+{
+	if (argc != 3) {
+		printf("Usage: %s DEVICE_NAME BAUD\n", argv[0]);
+    printf("       DEVICE_NAME is the name of the serial device, like /dev/ttyUSB0\n");
+    printf("       BAUD is the baud rate of the serial device, like 230400\n");
+		return 1;
+	}
+  char *dev = argv[1];
+  int baud = atoi(argv[2]);
+
+  // Initialize the WitMotion library and register a callback for data values coming
+  // from the device.  The callback function is called whenever a range of registers
+  // has been updated, telling the application about the fact that they have been
+  // updated.  The changed values are stored in a global sReg structure that is
+  // exposed by the library, indexed by the same values as those passed to the
+  // callback function.
+	WitInit(WIT_PROTOCOL_NORMAL, 0x50);
+	WitRegisterCallBack(SensorDataUpdate);
+	
+  int fd = -1;
+  fd = serial_open(dev, baud);
+  if (fd < 0) {
+    printf("Could not open %s with baud %d\n", dev, baud);
+    return 2;
+  }
+
+	printf("\n********************** Found device ************************\n");
+
+  // Continually loop, reading and interpreting characters until the
+  // callback is called with new data updates.
+	while (1) {
+
+    // Get all available characters and send them to the library
+    // for processing. When a report is available for a particular
+    // value, the callback function will be called to let us know.
+    // The response happens in the callback handler, which deals with each report
+    // type as it arrives.
+    char cBuff[1];
+    while(serial_read_data(fd, cBuff, 1)) {
+      WitSerialDataIn(cBuff[0]);
+    }
+  }
+
+  serial_close(fd);
+	return 0;
 }
 
