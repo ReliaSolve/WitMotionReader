@@ -89,55 +89,9 @@ static void SensorDataUpdate(uint32_t uiReg, uint32_t uiRegNum)
         break;
 
 //    case LonL:
-      case LonH:
-        // The NMEA8013 standard stipulates that the GPS longitude output format is ddmm.mmmmm
-        //  (dd is degrees, mm.mmmmm is minutes). The decimal point is removed when
-        //  longitude/latitude is output, so the longitude/latitude degrees can be calculated as follows:
-        // dd=Lon[31:0]/10000000;
-        // dd=Lat[31:0]/10000000;
-        // The longitude/latitude fraction can be calculated like this:
-        // mm.mmmmm=(Lon[31:0]%10000000)/100000; (% represents the remainder operation)
-        // mm.mmmmm=(Lat[31:0]%10000000)/100000; (% represents the remainder operation)
-        // Note: Positive numbers represent northern latitude, negative numbers represent southern latitude;
-        // Positive numbers represent east longitude, negative numbers represent west longitude.
-
-        // Height=((int)HeightH[15:0]<<16)|HeightL×100 (unit is meter)
-        // Please see the protocol description for details:
-        // https://drive.google.com/file/d/1xrfK9bAEncgFQYjvT_c6vwSEH0ZhzaUZ/view?usp=drive_link
-        {
-          int32_t value = sReg[LonL] + (sReg[LonH] << 16);
-          int degrees = value / 10000000;
-          double minutes = (value%10000000)/100000.0;
-          double fDegrees = degrees + minutes / 60;
-          printf("longitude:%.6lf\n", fDegrees);
-        }
-        break;
-
+//    case LonH:
 //    case LatL:
-      case LatH:
-        // The NMEA8013 standard stipulates that the GPS longitude output format is ddmm.mmmmm
-        //  (dd is degrees, mm.mmmmm is minutes). The decimal point is removed when
-        //  longitude/latitude is output, so the longitude/latitude degrees can be calculated as follows:
-        // dd=Lon[31:0]/10000000;
-        // dd=Lat[31:0]/10000000;
-        // The longitude/latitude fraction can be calculated like this:
-        // mm.mmmmm=(Lon[31:0]%10000000)/100000; (% represents the remainder operation)
-        // mm.mmmmm=(Lat[31:0]%10000000)/100000; (% represents the remainder operation)
-        // Note: Positive numbers represent northern latitude, negative numbers represent southern latitude;
-        // Positive numbers represent east longitude, negative numbers represent west longitude.
-
-        // Height=((int)HeightH[15:0]<<16)|HeightL×100 (unit is meter)
-        // Please see the protocol description for details:
-        // https://drive.google.com/file/d/1xrfK9bAEncgFQYjvT_c6vwSEH0ZhzaUZ/view?usp=drive_link
-        {
-          int32_t value = sReg[LatL] + (sReg[LatH] << 16);
-          int degrees = value / 10000000;
-          double minutes = (value%10000000)/100000.0;
-          double fDegrees = degrees + minutes / 60;
-          printf("latitude:%.6lf\n", fDegrees);
-        }
-        break;
-
+//    case LatH:
       case GPSHeight:
         // The NMEA8013 standard stipulates that the GPS longitude output format is ddmm.mmmmm
         //  (dd is degrees, mm.mmmmm is minutes). The decimal point is removed when
@@ -150,29 +104,32 @@ static void SensorDataUpdate(uint32_t uiReg, uint32_t uiRegNum)
         // Note: Positive numbers represent northern latitude, negative numbers represent southern latitude;
         // Positive numbers represent east longitude, negative numbers represent west longitude.
 
-        // Height=((int)HeightH[15:0]<<16)|HeightL×100 (unit is meter)
         // Please see the protocol description for details:
         // https://drive.google.com/file/d/1xrfK9bAEncgFQYjvT_c6vwSEH0ZhzaUZ/view?usp=drive_link
         {
-          int32_t value = sReg[GPSHeight];
-          double height = value / 10.0;
-          printf("GPS height:%.2lf\n", height);
+          double longitude, latitude, height;
+          {
+            int32_t value = sReg[LonL] + (sReg[LonH] << 16);
+            int degrees = value / 10000000;
+            double minutes = (value%10000000)/100000.0;
+            longitude = degrees + minutes / 60;
+          }
+          {
+            int32_t value = sReg[LatL] + (sReg[LatH] << 16);
+            int degrees = value / 10000000;
+            double minutes = (value%10000000)/100000.0;
+            latitude = degrees + minutes / 60;
+          }
+          {
+            int32_t value = sReg[GPSHeight];
+            height = value / 10.0;
+          }
+          printf("longitude:%11.6lf, latitude:%11.6lf, height: %6.2lf\n", longitude, latitude, height);
         }
         break;
 
 //    case HeightL:
       case HeightH:
-        // The NMEA8013 standard stipulates that the GPS longitude output format is ddmm.mmmmm
-        //  (dd is degrees, mm.mmmmm is minutes). The decimal point is removed when
-        //  longitude/latitude is output, so the longitude/latitude degrees can be calculated as follows:
-        // dd=Lon[31:0]/10000000;
-        // dd=Lat[31:0]/10000000;
-        // The longitude/latitude fraction can be calculated like this:
-        // mm.mmmmm=(Lon[31:0]%10000000)/100000; (% represents the remainder operation)
-        // mm.mmmmm=(Lat[31:0]%10000000)/100000; (% represents the remainder operation)
-        // Note: Positive numbers represent northern latitude, negative numbers represent southern latitude;
-        // Positive numbers represent east longitude, negative numbers represent west longitude.
-
         // Height=((int)HeightH[15:0]<<16)|HeightL×100 (unit is meter)
         // Please see the protocol description for details:
         // https://drive.google.com/file/d/1xrfK9bAEncgFQYjvT_c6vwSEH0ZhzaUZ/view?usp=drive_link
