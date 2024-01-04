@@ -64,3 +64,8 @@ It will also generate a program named **example** from *example.c* that is both 
 and has a more general list of data values. It is also more heavily commented. It is
 intended to be used as an example for developing a driver that uses this device.
 
+### Additional data fields:
+
+There is a [protocol description document]
+(https://drive.google.com/file/d/1xrfK9bAEncgFQYjvT_c6vwSEH0ZhzaUZ/view?usp=drive_link) that
+describes the formats and how to convert the registers into values.

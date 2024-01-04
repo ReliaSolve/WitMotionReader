@@ -3,6 +3,9 @@
 #include "REG.h"
 #include <stdint.h>
 
+// Please see the protocol description for details of the data parsing:
+// https://drive.google.com/file/d/1xrfK9bAEncgFQYjvT_c6vwSEH0ZhzaUZ/view?usp=drive_link
+
 // This is called whenever the WitSerialDataIn() function has enough
 // data to update one or more registers.  The values are updated in
 // the sReg global array and this callback function is called to let
