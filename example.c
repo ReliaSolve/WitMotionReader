@@ -23,6 +23,23 @@ static void SensorDataUpdate(uint32_t uiReg, uint32_t uiRegNum)
   for(i = 0; i < uiRegNum; i++) {
     switch(uiReg) {
 
+//    case YYMM:
+//    case DDHH:
+//    case MMSS:
+      case MS:
+        {
+          int YY = sReg[YYMM] & 0xff;
+          int Mo = (sReg[YYMM] & 0xff00) >> 8;
+          int DD = sReg[DDHH] & 0xff;
+          int HH = (sReg[DDHH] & 0xff00) >> 8;
+          int Mi = sReg[MMSS] & 0xff;
+          int SS = (sReg[MMSS] & 0xff00) >> 8;
+          int Ms = sReg[MS];
+          printf("Date: %02d/%02d/%02d, Time: %02d:%02d:%02d.%03d\n",
+            YY,Mo,DD, HH,Mi,SS, Ms);
+        }
+        break;
+
 //    case AX:
 //    case AY:
       case AZ:
